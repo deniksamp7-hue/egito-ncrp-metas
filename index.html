@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Metas Semanais - EG-NCRP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* Estilos originais mantidos */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
+                  url('Egito3.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    h1, h2 { text-align: center; color: #e2b94f; text-transform: uppercase; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+    .container { max-width: 900px; margin: auto; padding: 40px 20px; }
+    .box { background: rgba(21, 21, 21, 0.9); border-radius: 12px; padding: 30px; margin-bottom: 25px; box-shadow: 0 0 20px rgba(199, 154, 45, 0.2); border: 1px solid #c79a2d33; }
+    label { display: block; margin-top: 15px; font-weight: bold; color: #c79a2d; }
+    input, select { width: 100%; padding: 12px; margin-top: 8px; border-radius: 5px; border: 1px solid #333; background: #1f1f1f; color: #fff; box-sizing: border-box; }
+    button { width: 100%; padding: 15px; margin-top: 20px; border-radius: 5px; border: none; background: linear-gradient(45deg, #c79a2d, #e2b94f); color: #000; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(199, 154, 45, 0.4); }
+    .btn-voltar { background: transparent; border: 1px solid #c79a2d; color: #c79a2d; margin-top: 10px; }
+    .btn-voltar:hover { background: #ee0808; color: #000; border-color: #ee0808; }
+    .items { display: grid; grid-template-columns: 1fr 120px; gap: 15px; align-items: center; margin-top: 10px; }
+    input[type="checkbox"] { width: 20px; height: 20px; margin-right: 10px; accent-color: #03f9d0; }
+    .hidden { display: none; }
+    .footer { text-align: center; font-size: 13px; color: #0af3fb; opacity: 0.8; padding-bottom: 30px; }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="login">
+    <div class="box">
+      <h1>𓋹 Egito NCRP 𓋹</h1>
+      <h2 style="font-size: 1.2rem; margin-top: -10px;">𓋹 Painel de Metas 𓋹</h2>
+
+      <label>Nick</label>
+      <input type="text" id="loginNick" placeholder="Digite seu Nick">
+
+      <label>Passaporte</label>
+      <input type="number" id="loginPass" placeholder="Digite seu Passaporte">
+
+      <label>Cargo</label>
+      <select id="loginCargo">
+        <option>00 - Rei</option>
+        <option>01 - Faraó</option>
+        <option>02 - Sacerdote</option>
+        <option>03 - Guardião</option>
+        <option>04 - Conselheiro</option>
+      </select>
+
+      <button onclick="entrar()">Entrar no Sistema</button>
+    </div>
+  </div>
+
+  <div class="container hidden" id="meta">
+    <div class="box">
+      <h1>Publicar Meta Semanal</h1>
+
+      <label>Título da Meta</label>
+      <input type="text" id="metaTitulo" placeholder="Ex: Meta Semana 01">
+
+      <label>Meta publicada por</label>
+      <input type="text" id="metaAutorExibicao" disabled>
+
+      <label>Webhook Discord</label>
+      <input type="text" id="webhookUrl" placeholder="Cole aqui a URL do Webhook do Discord">
+    </div>
+
+    <div class="box">
+      <h2>🔫 Armamentos</h2>
+      <div class="items">
+        <label><input type="checkbox" class="item-check" data-name="AK-47"> AK-47</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+        
+        <label><input type="checkbox" class="item-check" data-name="PDW"> PDW</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+        
+        <label><input type="checkbox" class="item-check" data-name="Mini-Uzi"> Mini-Uzi</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>🔥 Munições</h2>
+      <div class="items">
+        <label><input type="checkbox" class="item-check" data-name="Munição .380"> Munição .380</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+        
+        <label><input type="checkbox" class="item-check" data-name="Munição 7.62"> Munição 7.62</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+      </div>
+    </div>
+
+    <div class="box">
+      <button onclick="enviarMeta()">Publicar Meta</button>
+      <button class="btn-voltar" onclick="voltar()">Voltar ao Login</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2026 Egito NCRP - Sistema de Gestão de Metas
+  </div>
+
+  <script>
+    // CARREGAR DADOS AO ABRIR A PÁGINA
+    window.onload = function() {
+        if(localStorage.getItem('egito_nick')) document.getElementById('loginNick').value = localStorage.getItem('egito_nick');
+        if(localStorage.getItem('egito_pass')) document.getElementById('loginPass').value = localStorage.getItem('egito_pass');
+        if(localStorage.getItem('egito_cargo')) document.getElementById('loginCargo').value = localStorage.getItem('egito_cargo');
+        if(localStorage.getItem('egito_webhook')) document.getElementById('webhookUrl').value = localStorage.getItem('egito_webhook');
+    };
+
+    function entrar() {
+      const nick = document.getElementById('loginNick').value;
+      const pass = document.getElementById('loginPass').value;
+      const cargo = document.getElementById('loginCargo').value;
+      
+      if(!nick || !pass) return alert("Preencha Nick e Passaporte!");
+
+      // SALVAR DADOS DA CONTA
+      localStorage.setItem('egito_nick', nick);
+      localStorage.setItem('egito_pass', pass);
+      localStorage.setItem('egito_cargo', cargo);
+
+      document.getElementById('metaAutorExibicao').value = `${nick} | ${cargo}`;
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('meta').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+
+    function voltar() {
+      document.getElementById('meta').classList.add('hidden');
+      document.getElementById('login').classList.remove('hidden');
+    }
+
+    async function enviarMeta() {
+      const webhook = document.getElementById('webhookUrl').value;
+      const titulo = document.getElementById('metaTitulo').value;
+      const autor = document.getElementById('metaAutorExibicao').value;
+      const passaporte = document.getElementById('loginPass').value;
+
+      if (!webhook) return alert("Por favor, insira a URL do Webhook!");
+      if (!titulo) return alert("Dê um título para a meta!");
+
+      // SALVAR WEBHOOK
+      localStorage.setItem('egito_webhook', webhook);
+
+      let listaItens = "";
+      const checks = document.querySelectorAll('.item-check');
+      const qtds = document.querySelectorAll('.item-qtd');
+
+      checks.forEach((check, index) => {
+        if (check.checked) {
+          const quantidade = qtds[index].value || 0;
+          listaItens += `𓂀 **${check.getAttribute('data-name')}**: \`${quantidade} unidades\`\n`;
+        }
+      });
+
+      if (!listaItens) return alert("Selecione pelo menos um item para a meta!");
+
+      const imagemUrl = "https://media.discordapp.net/attachments/1429958892007329911/1457573273419124798/Egito6.png?ex=695c7e64&is=695b2ce4&hm=59b4f4c9581d067bd95bbe4ac08bca2a5972e58afc1eefbad6fb4a5e3cdb0039&=&format=webp&quality=lossless&width=843&height=562";
+
+      const corpoMagem = {
+        username: "SISTEMA DE METAS | EGITO NCRP",
+        avatar_url: "https://cdn.discordapp.com/attachments/1429958892007329911/1457568861321957543/content.png?ex=695c7a48&is=695b28c8&hm=631e4a28d3bf3c04cfd9fb1f584ecda26fbae9eaf52e54a35af4d293214f1a27&",
+        embeds: [{
+          title: `𓂀 ${titulo.toUpperCase()} 𓂀`,
+          description: "O conselho do Egito acaba de publicar novas ordens semanais.",
+          color: 14858543,
+          fields: [
+            { name: "👑 Responsável", value: `\`\`\`css\n${autor}\`\`\``, inline: true },
+            { name: "🆔 Passaporte", value: `\`\`\`fix\n${passaporte}\n\`\`\``, inline: true },
+            { name: "📜 Itens da Meta Semanal", value: listaItens, inline: false }
+          ],
+          image: { url: imagemUrl },
+          thumbnail: { url: "https://i.postimg.cc/qBjFc713/cards.gif" },
+          footer: { text: "Egito NCRP • A glória é nossa única opção", icon_url: "https://i.imgur.com/u5jYmY8.png" },
+          timestamp: new Date()
+        }]
+      };
+
+      try {
+        const response = await fetch(webhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(corpoMagem)
+        });
+
+        if (response.ok) {
+          alert("✅ Meta enviada com sucesso para o Discord!");
+        } else {
+          alert("❌ Erro ao enviar. Verifique a URL do Webhook.");
+        }
+      } catch (error) {
+        alert("❌ Erro de conexão ao enviar para o Discord.");
+      }
+    }
+  </script>
+
+</body>
+</html>
