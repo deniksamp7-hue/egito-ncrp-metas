@@ -21,18 +21,25 @@
     .container { max-width: 900px; margin: auto; padding: 40px 20px; }
     .box { background: rgba(21, 21, 21, 0.9); border-radius: 12px; padding: 30px; margin-bottom: 25px; box-shadow: 0 0 20px rgba(199, 154, 45, 0.2); border: 1px solid #c79a2d33; }
     label { display: block; margin-top: 15px; font-weight: bold; color: #c79a2d; }
-    input, select { width: 100%; padding: 12px; margin-top: 8px; border-radius: 5px; border: 1px solid #333; background: #1f1f1f; color: #fff; box-sizing: border-box; }
+    input, select, textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 5px; border: 1px solid #333; background: #1f1f1f; color: #fff; box-sizing: border-box; font-family: inherit; }
+    textarea { resize: vertical; min-height: 80px; }
     button { width: 100%; padding: 15px; margin-top: 20px; border-radius: 5px; border: none; background: linear-gradient(45deg, #c79a2d, #e2b94f); color: #000; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
     button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(199, 154, 45, 0.4); }
     .btn-voltar { background: transparent; border: 1px solid #c79a2d; color: #c79a2d; margin-top: 10px; }
     .btn-voltar:hover { background: #ee0808; color: #000; border-color: #ee0808; }
     .items { display: grid; grid-template-columns: 1fr 120px; gap: 15px; align-items: center; margin-top: 10px; }
-    input[type="checkbox"] { width: 20px; height: 20px; margin-right: 10px; accent-color: #03f9d0; }
+    .mencao-grid { display: flex; gap: 20px; margin-top: 10px; background: #1a1a1a; padding: 10px; border-radius: 5px; border: 1px solid #333; }
+    .mencao-item { display: flex; align-items: center; cursor: pointer; font-size: 14px; }
+    input[type="checkbox"] { width: 18px; height: 18px; margin-right: 8px; accent-color: #e2b94f; cursor: pointer; }
     .hidden { display: none; }
     .footer { text-align: center; font-size: 13px; color: #0af3fb; opacity: 0.8; padding-bottom: 30px; }
   </style>
 </head>
 <body>
+
+  <audio id="musicaLogin" loop>
+    <source src="https://cdn.discordapp.com/attachments/1429980539871428688/1456427763010371685/Imperio_da_Areia_by_DJ_Biel_Vasquez.mp3?ex=69a4ca8d&is=69a3790d&hm=5e280e4ed655f7b2917413b349ba12052976c858ccb40bb59106650220f6c51b&" type="audio/mpeg">
+  </audio>
 
   <div class="container" id="login">
     <div class="box">
@@ -70,6 +77,23 @@
 
       <label>Webhook Discord</label>
       <input type="text" id="webhookUrl" placeholder="Cole aqui a URL do Webhook do Discord">
+
+      <label>Mencionar no Discord</label>
+      <div class="mencao-grid">
+        <label class="mencao-item"><input type="checkbox" class="check-mencao" value="@everyone"> @everyone</label>
+        <label class="mencao-item"><input type="checkbox" class="check-mencao" value="<@&1429965449805959230>"> Cargo Meta</label>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>🏆 Ações</h2>
+      <div class="items">
+        <label><input type="checkbox" class="item-check" data-name="Lojinha"> Lojinha</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+        
+        <label><input type="checkbox" class="item-check" data-name="Joalheria"> Joalheria</label>
+        <input type="number" class="item-qtd" placeholder="Qtd">
+      </div>
     </div>
 
     <div class="box">
@@ -98,6 +122,12 @@
     </div>
 
     <div class="box">
+      <h2>📦 Comprovação de Entrega</h2>
+      <label>Como realizar a entrega?</label>
+      <textarea id="metaEntrega" placeholder="Descreva como o membro deve comprovar a meta..."></textarea>
+    </div>
+
+    <div class="box">
       <button onclick="enviarMeta()">Publicar Meta</button>
       <button class="btn-voltar" onclick="voltar()">Voltar ao Login</button>
     </div>
@@ -108,7 +138,8 @@
   </div>
 
   <script>
-    // CARREGAR DADOS AO ABRIR A PÁGINA
+    const musica = document.getElementById('musicaLogin');
+
     window.onload = function() {
         if(localStorage.getItem('egito_nick')) document.getElementById('loginNick').value = localStorage.getItem('egito_nick');
         if(localStorage.getItem('egito_pass')) document.getElementById('loginPass').value = localStorage.getItem('egito_pass');
@@ -123,7 +154,10 @@
       
       if(!nick || !pass) return alert("Preencha Nick e Passaporte!");
 
-      // SALVAR DADOS DA CONTA
+      // Tocar Música
+      musica.play().catch(e => console.log("Áudio bloqueado pelo navegador até interação."));
+      musica.volume = 0.5; // Volume em 50%
+
       localStorage.setItem('egito_nick', nick);
       localStorage.setItem('egito_pass', pass);
       localStorage.setItem('egito_cargo', cargo);
@@ -135,6 +169,8 @@
     }
 
     function voltar() {
+      musica.pause();
+      musica.currentTime = 0; // Reseta a música ao voltar
       document.getElementById('meta').classList.add('hidden');
       document.getElementById('login').classList.remove('hidden');
     }
@@ -144,11 +180,17 @@
       const titulo = document.getElementById('metaTitulo').value;
       const autor = document.getElementById('metaAutorExibicao').value;
       const passaporte = document.getElementById('loginPass').value;
+      const entregaInfo = document.getElementById('metaEntrega').value;
 
-      if (!webhook) return alert("Por favor, insira a URL do Webhook!");
-      if (!titulo) return alert("Dê um título para a meta!");
+      let mencoesSelecionadas = [];
+      document.querySelectorAll('.check-mencao:checked').forEach(el => {
+        mencoesSelecionadas.push(el.value);
+      });
+      const mencaoFinal = mencoesSelecionadas.join(" ");
 
-      // SALVAR WEBHOOK
+      if (!webhook) return alert("Insira o Webhook!");
+      if (!titulo) return alert("Insira o título!");
+
       localStorage.setItem('egito_webhook', webhook);
 
       let listaItens = "";
@@ -158,17 +200,18 @@
       checks.forEach((check, index) => {
         if (check.checked) {
           const quantidade = qtds[index].value || 0;
-          listaItens += `𓂀 **${check.getAttribute('data-name')}**: \`${quantidade} unidades\`\n`;
+          listaItens += `𓂀 **${check.getAttribute('data-name')}**: \`${quantidade}\` unid/vezes\n`;
         }
       });
 
-      if (!listaItens) return alert("Selecione pelo menos um item para a meta!");
+      if (!listaItens) return alert("Selecione os itens!");
 
       const imagemUrl = "https://media.discordapp.net/attachments/1429958892007329911/1457573273419124798/Egito6.png?ex=695c7e64&is=695b2ce4&hm=59b4f4c9581d067bd95bbe4ac08bca2a5972e58afc1eefbad6fb4a5e3cdb0039&=&format=webp&quality=lossless&width=843&height=562";
 
       const corpoMagem = {
         username: "SISTEMA DE METAS | EGITO NCRP",
         avatar_url: "https://cdn.discordapp.com/attachments/1429958892007329911/1457568861321957543/content.png?ex=695c7a48&is=695b28c8&hm=631e4a28d3bf3c04cfd9fb1f584ecda26fbae9eaf52e54a35af4d293214f1a27&",
+        content: mencaoFinal,
         embeds: [{
           title: `𓂀 ${titulo.toUpperCase()} 𓂀`,
           description: "O conselho do Egito acaba de publicar novas ordens semanais.",
@@ -176,7 +219,8 @@
           fields: [
             { name: "👑 Responsável", value: `\`\`\`css\n${autor}\`\`\``, inline: true },
             { name: "🆔 Passaporte", value: `\`\`\`fix\n${passaporte}\n\`\`\``, inline: true },
-            { name: "📜 Itens da Meta Semanal", value: listaItens, inline: false }
+            { name: "📜 Itens da Meta Semanal", value: listaItens, inline: false },
+            { name: "📦 Comprovação de Entrega", value: entregaInfo ? `> ${entregaInfo}` : "> Não informado", inline: false }
           ],
           image: { url: imagemUrl },
           thumbnail: { url: "https://i.postimg.cc/qBjFc713/cards.gif" },
@@ -193,12 +237,12 @@
         });
 
         if (response.ok) {
-          alert("✅ Meta enviada com sucesso para o Discord!");
+          alert("✅ Meta enviada com sucesso!");
         } else {
-          alert("❌ Erro ao enviar. Verifique a URL do Webhook.");
+          alert("❌ Erro ao enviar.");
         }
       } catch (error) {
-        alert("❌ Erro de conexão ao enviar para o Discord.");
+        alert("❌ Erro de conexão.");
       }
     }
   </script>
